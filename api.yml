@@ -1,0 +1,353 @@
+openapi: 3.0.3
+info:
+  title: Receipts API service
+  version: 1.0.0
+  description: Save  and printed receipts
+paths:
+  /api/printers/:
+    get:
+      operationId: printers_list
+      description: |-
+        Return list all printers.
+      tags:
+      - printers
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PrinterList'
+          description: ''
+    post:
+      operationId: printers_create
+      description: |-
+        Create  printer
+      tags:
+      - printers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Printer'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Printer'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Printer'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Printer'
+          description: ''
+  /api/printers/{id}/:
+    get:
+      operationId: printers_retrieve
+      description: |-
+            Return the detail page for the printer, where you can view all receipts for this printer
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this printer.
+        required: true
+      tags:
+      - printers
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrinterDetail'
+          description: ''
+    put:
+      operationId: printers_update
+      description: |-
+            Empty request change recipts.status for all receipts for this printer rendered -> printed
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this printer.
+        required: true
+      tags:
+      - printers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrinterUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PrinterUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PrinterUpdate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrinterUpdate'
+          description: ''
+    patch:
+      operationId: printers_partial_update
+      description: |-
+            Empty request change recipts.status for all receipts for this printer rendered -> printed
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this printer.
+        required: true
+      tags:
+      - printers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPrinter'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPrinter'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPrinter'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Printer'
+          description: ''
+  /api/receipts/create/:
+    post:
+      operationId: receipts_create_create
+      description: 'this endpoint accepts JSON from ERP. (Ex. {"point_id": 1,"order_number":
+        1,"type": "client","order_data": [{"name": "banana","price": 20,"count": 2},...]}). 
+        creates checks in the database and runs a worker to generate PDFs for these checks.'
+      tags:
+      - receipts
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/receipts/list/:
+    get:
+      operationId: receipts_list_list
+      description: This endpoint displays all checks
+      tags:
+      - receipts
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Receipt'
+          description: ''
+components:
+  schemas:
+    CheckTypeEnum:
+      enum:
+      - kitchen
+      - client
+      type: string
+      description: |-
+        * `kitchen` - Kitchen
+        * `client` - Client
+    PatchedPrinter:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 63
+        api_key:
+          type: string
+          maxLength: 255
+        check_type:
+          $ref: '#/components/schemas/CheckTypeEnum'
+        point_id:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+    Printer:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 63
+        api_key:
+          type: string
+          maxLength: 255
+        check_type:
+          $ref: '#/components/schemas/CheckTypeEnum'
+        point_id:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+      required:
+      - api_key
+      - check_type
+      - id
+      - name
+      - point_id
+    PrinterDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 63
+        api_key:
+          type: string
+          maxLength: 255
+        check_type:
+          $ref: '#/components/schemas/CheckTypeEnum'
+        point_id:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        receipts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Receipt'
+          readOnly: true
+      required:
+      - api_key
+      - check_type
+      - id
+      - name
+      - point_id
+      - receipts
+    PrinterList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 63
+        api_key:
+          type: string
+          maxLength: 255
+        check_type:
+          $ref: '#/components/schemas/CheckTypeEnum'
+        point_id:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+      required:
+      - api_key
+      - check_type
+      - id
+      - name
+      - point_id
+    PrinterUpdate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 63
+        api_key:
+          type: string
+          maxLength: 255
+        check_type:
+          $ref: '#/components/schemas/CheckTypeEnum'
+        point_id:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        receipts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Receipt'
+          readOnly: true
+      required:
+      - api_key
+      - check_type
+      - id
+      - name
+      - point_id
+      - receipts
+    Receipt:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        pdf_file:
+          type: string
+          format: uri
+          nullable: true
+      required:
+      - id
+    StatusEnum:
+      enum:
+      - new
+      - rendered
+      - printed
+      type: string
+      description: |-
+        * `new` - New
+        * `rendered` - Rendered
+        * `printed` - Printed
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

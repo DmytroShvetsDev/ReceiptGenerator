@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Receipt</title>
+</head>
+<body>
+    <h1>Order number: {{ order_number }}</h1>
+    <h2>Point: {{ point_id }}</h2>
+
+    <h2>Receipt type: {{ check_type }}</h2>
+
+    <h3>Info about order:</h3>
+    <ul>
+      {% for item in order_data %}
+        <li>{{ item.name }}: ${{ item.price }}/piece x {{ item.count }}</li>
+      {% endfor %}
+    </ul>
+    <h3>Total {{ total }}</h3>
+</body>
+</html>
