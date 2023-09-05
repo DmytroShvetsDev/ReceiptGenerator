@@ -154,7 +154,7 @@ paths:
       operationId: receipts_create_create
       description: 'this endpoint accepts JSON from ERP. (Ex. {"point_id": 1,"order_number":
         1,"type": "client","order_data": [{"name": "banana","price": 20,"count": 2},...]}). 
-        creates checks in the database and runs a worker to generate PDFs for these checks.'
+        creates receipts in the database and runs a worker to generate PDFs for these receipts.'
       tags:
       - receipts
       security:
@@ -167,7 +167,7 @@ paths:
   /api/receipts/list/:
     get:
       operationId: receipts_list_list
-      description: This endpoint displays all checks
+      description: This endpoint displays all receipts
       tags:
       - receipts
       security:

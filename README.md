@@ -37,8 +37,8 @@ For an example of filling out .env, see .env.sample!
 - using [POST] /api/receipts/create/ --- this endpoint accepts JSON from ERP. (Ex. {"point_id": 1,"order_number":
         1,"type": "client","order_data": [{"name": "banana","price": 20,"count": 2},...]}). 
         
-    creates checks in the database and runs a worker to generate PDFs for these checks.
-- using [GET] /api/receipts/list/ --- This endpoint displays all checks
+    creates receipts in the database and runs a worker to generate PDFs for these receipts.
+- using [GET] /api/receipts/list/ --- This endpoint displays all receipts
 
 #### you can also see the detailed documentation in the api.yml file
 
