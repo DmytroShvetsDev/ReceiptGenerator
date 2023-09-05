@@ -7,40 +7,50 @@ import requests
 from celery import shared_task
 from django.template.loader import render_to_string
 
-from receipt.models import Receipt
+from ReceiptGenerator.settings import ROOT_PDF_DIRECTORY
+from receipt.models import Receipt, STATUS_RENDERED
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 
 @shared_task
-def produce_receipt(receipt_id):
+def produce_receipt(receipt_id: int) -> None:
     receipt = Receipt.objects.get(pk=receipt_id)
+
+    point_id = receipt.order.get("point_id")
+    order_id = receipt.order.get("order_number")
 
     total = calculate_order_total(receipt.order.get("order_data"))
     html_content = generate_html_content(
-        receipt.order.get("order_number"),
+        order_id,
         receipt.type,
         receipt.order.get("order_data"),
-        receipt.order.get("point_id"),
+        point_id,
         total,
     )
-    pdf_path = generate_pdf(
-        receipt.order.get("order_number"), receipt.type, html_content
-    )
-    receipt.pdf_file.name = pdf_path
-    receipt.status = "rendered"
+
+    point_directory = os.path.join(ROOT_PDF_DIRECTORY, f"point_{point_id}")
+    os.makedirs(point_directory, exist_ok=True)
+
+    pdf_filename = f"{order_id}_{receipt.type}.pdf"
+    pdf_file_path = os.path.join(point_directory, pdf_filename)
+
+    generate_pdf(pdf_file_path, html_content)
+    receipt.pdf_file.name = pdf_file_path
+    receipt.status = STATUS_RENDERED
     receipt.save()
 
 
-def generate_pdf(order_id, check_type, html_content: str) -> str:
-    html_file_path = f"/tmp/{order_id}_{check_type}.html"
-    with open(html_file_path, "w") as html_file:
-        html_file.write(html_content)
+def generate_pdf(target_path: str, html_content: str) -> None:
 
-    docker_host = "0.0.0.0"
-    docker_port = 32768
+    docker_host = os.environ["WKHTMLTOPDF_DOCKER_HOST"]
+    docker_port = os.environ["WKHTMLTOPDF_DOCKER_PORT"]
 
     url = f"http://{docker_host}:{docker_port}/"
     data = {
-        "contents": base64.b64encode(open(html_file_path, "rb").read()).decode(),
+        "contents": base64.b64encode(html_content.encode()).decode(),
     }
     headers = {
         "Content-Type": "application/json",
@@ -49,22 +59,20 @@ def generate_pdf(order_id, check_type, html_content: str) -> str:
     response = requests.post(url, data=json.dumps(data), headers=headers)
 
     if response.status_code == 200:
-        pdf_filename = f"{order_id}_{check_type}.pdf"
-        pdf_file_path = os.path.join("media/pdf", pdf_filename)
-        with open(pdf_file_path, "wb") as pdf_file:
+
+        with open(target_path, "wb") as pdf_file:
             pdf_file.write(response.content)
 
-        return pdf_file_path
     else:
-        raise Exception("PDF generating errors")
+        raise RuntimeError("PDF generation failure")
 
 
 def generate_html_content(
-    order_id: str,
-    check_type: str,
-    order_data: list[dict[str, Any]],
-    point_id: str,
-    total: int,
+        order_id: str,
+        check_type: str,
+        order_data: list[dict[str, Any]],
+        point_id: str,
+        total: int,
 ) -> str:
     html_template_path = "receipt.html"
     html_content = render_to_string(

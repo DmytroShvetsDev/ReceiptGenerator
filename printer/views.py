@@ -9,7 +9,7 @@ from printer.serializers import (
     PrinterDetailSerializer,
     PrinterUpdateSerializer,
 )
-from receipt.models import Receipt
+from receipt.models import Receipt, STATUS_PRINTED
 
 
 class PrinterViewSet(
@@ -38,6 +38,6 @@ class PrinterViewSet(
         instance = serializer.save()
         receipt = Receipt.objects.filter(printer_id=instance)
         if receipt.exists():
-            receipt.update(status="printed")
+            receipt.update(status=STATUS_PRINTED)
 
         return Response(serializer.data, status=status.HTTP_200_OK)

@@ -2,12 +2,13 @@ version: "3"
 
 services:
   app:
+    image: app
     build:
       context: .
     ports:
       - "8000:8000"
-#    volumes:
-#      - ./:/app
+    volumes:
+      - ./:/app
     command: >
       sh -c "python3 manage.py wait_for_db &&
              python3 manage.py migrate &&
@@ -19,7 +20,20 @@ services:
     depends_on:
       - db
       - redis
+      - worker
+
+  worker:
+    image: app
+    command: celery -A ReceiptGenerator worker -l INFO -E
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
       - wkhtmltopdf
+    volumes:
+      - ./:/app
+
   redis:
     image: redis
     ports:
@@ -35,6 +49,6 @@ services:
   wkhtmltopdf:
     image: openlabs/docker-wkhtmltopdf-aas
     ports:
-      - "32768:32768"
+      - "80:80"
     env_file:
       - .env
