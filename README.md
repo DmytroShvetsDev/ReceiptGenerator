@@ -42,4 +42,6 @@ For an example of filling out .env, see .env.sample!
 
 #### you can also see the detailed documentation in the api.yml file
 
-App must access the /api/printers/{id}/ endpoint (where id is printer_id) to work with receipts from a specific printer. To change the status of receipts, you need to send an empty [PUT, PATCH] request to this endpoint. The link to the PDF file of each receipt is located in the "pdf_file" object of each receipt in the response to the request to the /api/printers/{id}/ endpoint.
+### App flow:
+
+![App flow](App_flow.png)
