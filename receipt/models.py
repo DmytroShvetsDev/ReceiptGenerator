@@ -31,3 +31,8 @@ class Receipt(models.Model):
         default=STATUS_NEW
     )
     pdf_file = models.FileField(upload_to=ROOT_PDF_DIRECTORY, null=True, blank=True)
+    order_number = models.IntegerField()
+    point_id = models.IntegerField()
+
+    class Meta:
+        unique_together = ("order_number", "point_id", "printer_id")

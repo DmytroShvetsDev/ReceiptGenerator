@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import ListAPIView
@@ -21,20 +22,13 @@ class CreateReceipt(APIView):
         if serializer.is_valid():
             validated_data = serializer.validated_data
 
+            order_number = validated_data.get("order_number")
             point_id = validated_data.get("point_id")
             printers = Printer.objects.filter(point_id=point_id)
+
             if not printers:
                 return Response(
                     {"message": "This point has no printers."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            if Receipt.objects.filter(order=validated_data).exists():
-                return Response(
-                    {
-                        "message":
-                            "Checks for this order have already been created."
-                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -44,10 +38,20 @@ class CreateReceipt(APIView):
                     printer=printer,
                     type=printer.check_type,
                     order=validated_data,
+                    order_number=order_number,
+                    point_id=point_id
                 )
                 receipts.append(receipt)
 
-            Receipt.objects.bulk_create(receipts)
+            try:
+                Receipt.objects.bulk_create(receipts)
+            except IntegrityError:
+                return Response(
+                    {
+                        "message": "Receipts for this order have already been created."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             for receipt in receipts:
                 produce_receipt.delay(receipt.id)
@@ -59,7 +63,7 @@ class CreateReceipt(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@extend_schema(description="This endpoint displays all checks")
+@extend_schema(description="This endpoint displays all receipts")
 class ListReceipts(ListAPIView):
     queryset = Receipt.objects.all()
     serializer_class = ReceiptSerializer

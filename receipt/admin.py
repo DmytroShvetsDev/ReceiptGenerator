@@ -4,7 +4,7 @@ from receipt.models import Receipt
 
 
 class ReceiptAdmin(admin.ModelAdmin):
-    list_display = ("id", "order", "printer", "type", "status", "pdf_file")
+    list_display = ("id", "order_number", "point_id", "order", "printer", "type", "status", "pdf_file")
     list_filter = ("printer", "type", "status")
 
 
