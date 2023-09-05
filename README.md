@@ -33,6 +33,7 @@ For an example of filling out .env, see .env.sample!
 - using [POST] /api/printers/ --- Create printer
 - using [GET] /api/printers/{id}/ --- Return the detail page for the printer, where you can view all receipts for this printer
 - using [PUT, PATCH] /api/printers/{id}/ --- Empty request change recipts.status for all receipts for this printer rendered -> printed
+       
 - using [POST] /api/receipts/create/ --- this endpoint accepts JSON from ERP. (Ex. {"point_id": 1,"order_number":
         1,"type": "client","order_data": [{"name": "banana","price": 20,"count": 2},...]}). 
         
@@ -40,3 +41,5 @@ For an example of filling out .env, see .env.sample!
 - using [GET] /api/receipts/list/ --- This endpoint displays all checks
 
 #### you can also see the detailed documentation in the api.yml file
+
+App must access the /api/printers/{id}/ endpoint (where id is printer_id) to work with receipts from a specific printer. To change the status of receipts, you need to send an empty [PUT, PATCH] request to this endpoint. The link to the PDF file of each receipt is located in the "pdf_file" object of each receipt in the response to the request to the /api/printers/{id}/ endpoint.
