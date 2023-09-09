@@ -88,7 +88,7 @@ def generate_html_content(
     return html_content
 
 
-def calculate_order_total(order_data):
+def calculate_order_total(order_data: list[dict[str, Any]]) -> int:
     total = 0
 
     for item in order_data:
